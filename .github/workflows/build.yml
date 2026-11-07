@@ -32,7 +32,16 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             ARCHS=arm64 \
-            | tail -40
+            2>&1 | tee build_full.log | tail -40
+          echo "构建成功"
+
+      - name: 失败时打印全部编译错误
+        if: failure()
+        run: |
+          echo "===== 全部 error 行 ====="
+          grep -E "error:|fatal error:|BUILD FAILED|The following build commands failed" build_full.log || echo "（无 error 行，请下载完整日志查看）"
+          echo "===== error 行前后上下文 ====="
+          grep -B 3 -A 8 -E "error:|fatal error:" build_full.log || true
 
       - name: 打包 IPA（Payload 目录 + zip）
         run: |
@@ -46,4 +55,12 @@ jobs:
         with:
           name: SimpleChat-unsigned-ipa
           path: SimpleChat-unsigned.ipa
+          retention-days: 30
+
+      - name: 上传完整构建日志（无论成败）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-full-log
+          path: build_full.log
           retention-days: 30

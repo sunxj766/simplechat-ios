@@ -21,10 +21,8 @@ enum CryptoBox {
     static func encrypt(_ text: String, key: SymmetricKey) throws -> String {
         let nonce = AES.GCM.Nonce()
         let sealed = try AES.GCM.seal(Data(text.utf8), using: key, nonce: nonce)
-        var out = Data()
-        out.append(contentsOf: nonce.rawRepresentation)     // 12B nonce
-        out.append(sealed.ciphertext)                       // 密文
-        out.append(sealed.tag)                              // 16B tag
+        // combined = nonce(12B) ‖ 密文 ‖ tag(16B)，与服务器封帧格式逐字节一致
+        var out = Data(sealed.combined!)
         return out.base64EncodedString()
     }
 

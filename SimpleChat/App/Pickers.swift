@@ -36,15 +36,15 @@ struct PhotoPicker: UIViewControllerRepresentable {
             provider.loadDataRepresentation(forTypeIdentifier: type.identifier) { data, _ in
                 if let data {
                     DispatchQueue.main.async {
-                        onPicked(data, type == .png ? "image/png" : "image/jpeg")
+                        self.onPicked(data, type == .png ? "image/png" : "image/jpeg")
                     }
                 } else {
-                    // 兜底：解码后重编码
+                    // 兕底：解码后重编码
                     provider.loadObject(ofClass: UIImage.self) { object, _ in
                         guard let image = object as? UIImage,
                               let jpeg = image.jpegData(compressionQuality: 0.9) else { return }
                         DispatchQueue.main.async {
-                            onPicked(jpeg, "image/jpeg")
+                            self.onPicked(jpeg, "image/jpeg")
                         }
                     }
                 }
@@ -74,7 +74,7 @@ struct FilePicker: UIViewControllerRepresentable {
             self.onPicked = onPicked
         }
 
-        func documentPicker(_ controller: UIDocumentPickerController, didPickDocumentsAt urls: [URL]) {
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
             if let url = urls.first {
                 onPicked(url)
             }

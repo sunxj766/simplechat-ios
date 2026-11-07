@@ -3,11 +3,11 @@ import Foundation
 // MARK: - 消息模型（对应服务器 message / history_resp / undelivered 中的消息对象）
 
 struct Message: Identifiable, Equatable {
-    let id: Int
+    var id: Int
     let sender: String
     let receiver: String
     var content: String
-    let ts: TimeInterval
+    var ts: TimeInterval
     var msgType: MsgType = .text
     var file: FileMeta?
 

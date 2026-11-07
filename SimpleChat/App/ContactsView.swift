@@ -30,7 +30,7 @@ struct ContactsView: View {
                 ChatView(peer: peer)
             }
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     // 连接状态
                     HStack(spacing: 4) {
                         Circle()
@@ -41,7 +41,7 @@ struct ContactsView: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         logout()
                     } label: {

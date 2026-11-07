@@ -106,7 +106,7 @@ struct ChatView: View {
         .navigationTitle(peer)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     Button(role: .destructive) {
                         showClearConfirm = true

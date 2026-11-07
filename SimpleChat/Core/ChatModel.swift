@@ -84,7 +84,7 @@ final class ChatModel: ObservableObject {
             typingTimers.removeValue(forKey: peer)
 
         case "login_ok":
-            resetAfterRelogin(obj)
+            resetAfterRelogin(obj: obj)
 
         default:
             break

@@ -7,6 +7,9 @@ options:
 
 settings:
   base:
+    # Xcode 26 工具链仍支持 Swift 5 语言模式；
+    # Swift 6 语言模式下 Sendable 并发检查是硬错误（SWIFT_STRICT_CONCURRENCY 关不干净），
+    # 用 5.0 彻底避开，业务代码零改动
     SWIFT_VERSION: "5.0"
     TARGETED_DEVICE_FAMILY: "1,2"
     ENABLE_BITCODE: "NO"

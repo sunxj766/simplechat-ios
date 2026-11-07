@@ -78,7 +78,7 @@ enum HttpFileTransfer {
 
         // 字段 3：file（本体）
         appendPartHeader(name: "file", filename: fileName)
-        body.append(Data("Content-Type: " + mime + crlf + crlf.utf8))
+        body.append(Data(("Content-Type: " + mime + crlf + crlf).utf8))
         body.append(try Data(contentsOf: fileUrl))
         body.append(Data(crlf.utf8))
 

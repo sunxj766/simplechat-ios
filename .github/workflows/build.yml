@@ -7,7 +7,8 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    # macos-14 已被 GitHub 下线（2026），用 latest 自动跟随当前稳定版
+    runs-on: macos-latest
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
@@ -20,6 +21,7 @@ jobs:
 
       - name: Xcode 云端构建（真机 SDK，免签名）
         run: |
+          set -o pipefail
           xcodebuild \
             -project SimpleChat.xcodeproj \
             -scheme SimpleChat \

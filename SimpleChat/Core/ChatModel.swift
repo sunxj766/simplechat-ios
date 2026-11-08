@@ -20,7 +20,6 @@ final class ChatModel: ObservableObject {
     private var conn: ChatConnection?
     private var nextLocalId = -1                 // 本地临时 id（负数，不与服务器 id 冲突）
     private var typingTimers: [String: Timer] = [:]
-    private var historyRequested: Set<String> = []
     private var currentChatPeer: String?
 
     /// cid → 待确认消息
@@ -57,7 +56,6 @@ final class ChatModel: ObservableObject {
                 unreadCounts[peer] = 0
             } else {
                 conversations[peer] = msgs
-                historyRequested.insert(peer)
                 if let last = msgs.last {
                     markRead(peer: peer, lastReadId: last.id)
                 }
@@ -217,9 +215,8 @@ final class ChatModel: ObservableObject {
 
     // MARK: - 历史 / 图片 / 附件
 
+    /// 每次进入聊天页都从服务器拉取最新历史（不做本地去重）
     func loadHistory(peer: String) {
-        guard !historyRequested.contains(peer) else { return }
-        historyRequested.insert(peer)
         conn?.requestHistory(peer: peer)
     }
 
@@ -275,7 +272,6 @@ final class ChatModel: ObservableObject {
     private func resetAfterLogin(obj: [String: Any]) {
         typingPeers.removeAll()
         pendingAcks.removeAll()
-        historyRequested.removeAll()
         if let u = obj["unread"] as? [String: Int] {
             for (k, v) in u {
                 unreadCounts[k] = (currentChatPeer == k) ? 0 : v

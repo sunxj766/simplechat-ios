@@ -141,6 +141,13 @@ final class ChatConnection: NSObject, ObservableObject {
         let task = session.webSocketTask(with: url)
         socket = task
 
+        // 服务器开启 --secret 后要求所有帧（含 login）均为密文。
+        // 与 Windows/Android 一致：每次建连前就派生好密钥，
+        // （closeAndReset 会清空 key，此处保证重登/重连后依然有效）
+        if !secret.isEmpty {
+            key = CryptoBox.deriveKey(from: secret)
+        }
+
         // 登录帧先备好：onOpen 即发
         lastLoginFrame = ["type": "login", "username": username, "password": password]
         task.resume()
@@ -228,7 +235,6 @@ final class ChatConnection: NSObject, ObservableObject {
         switch obj["type"] as? String ?? "" {
 
         case "login_ok":
-            key = CryptoBox.deriveKey(from: secret)
             fileToken = obj["file_token"] as? String ?? ""
             let users = Set(obj["online_users"] as? [String] ?? [])
             reconnectDelay = 1.0

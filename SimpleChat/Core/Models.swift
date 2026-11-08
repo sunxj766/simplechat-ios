@@ -35,13 +35,15 @@ struct Message: Identifiable, Equatable {
 
 extension Message {
     /// 从服务器 JSON（message / history_resp / undelivered 通用）构造。
-    /// 服务器字段：id/from/to/content/ts/msg_type/file{id,name,size,mime}
+    /// 服务器字段：
+    /// - 实时 message 帧：id/from/to/content/ts/msg_type/file{...}
+    /// - history_resp / undelivered：id/sender/receiver/content/ts/msg_type/file{...}
     /// （另有扁平 file_* 与 content_enc 字段，客户端忽略）
     init?(json: [String: Any]) {
         guard
             let id = json["id"] as? Int,
-            let sender = json["from"] as? String,
-            let receiver = json["to"] as? String,
+            let sender = (json["from"] as? String) ?? (json["sender"] as? String),
+            let receiver = (json["to"] as? String) ?? (json["receiver"] as? String),
             let content = json["content"] as? String,
             let ts = (json["ts"] as? TimeInterval) ?? (json["ts"] as? Int).map({ TimeInterval($0) })
         else { return nil }

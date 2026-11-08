@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// 联系人列表：REST /api/users 10 秒轮询 + presence 实时在线状态 + 未读角标。
+/// 联系人/通讯录：REST /api/users 10 秒轮询 + presence 实时在线状态 + 未读角标。
+/// 与 Android 对齐：会话页即通讯录（显示全部注册用户），历史按需在聊天页拉取，客户端不落盘。
 struct ContactsView: View {
     @EnvironmentObject var conn: ChatConnection
     @EnvironmentObject var model: ChatModel
@@ -75,7 +76,7 @@ struct ContactsView: View {
         for i in list.indices {
             list[i].unread = model.unreadCounts[list[i].username] ?? 0
         }
-        return list
+        return list.sorted { $0.username < $1.username }
     }
 
     private func row(_ c: Contact) -> some View {
@@ -89,20 +90,25 @@ struct ContactsView: View {
                     .foregroundColor(c.online ? .green : .secondary)
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text(c.displayName)
-                    .font(.body)
-                Text(c.online ? "在线" : "离线")
-                    .font(.caption)
-                    .foregroundColor(c.online ? .green : .secondary)
-            }
-            Spacer()
-            if c.unread > 0 {
-                Text("\(c.unread)")
-                    .font(.caption.bold())
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Capsule().fill(Color.red))
+                HStack {
+                    Text(c.displayName)
+                        .font(.body)
+                    Spacer()
+                }
+                HStack {
+                    Text(c.online ? "在线" : "离线")
+                        .font(.caption)
+                        .foregroundColor(c.online ? .green : .secondary)
+                    Spacer()
+                    if c.unread > 0 {
+                        Text("\(c.unread)")
+                            .font(.caption.bold())
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Capsule().fill(Color.red))
+                    }
+                }
             }
         }
         .padding(.vertical, 2)

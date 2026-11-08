@@ -2,7 +2,7 @@ import Foundation
 import Combine
 
 /// 业务数据层：订阅 ChatConnection 帧事件，维护会话消息、历史、未读、已读回执。
-/// 与服务器 v1.3 一致：内存态存储（不落盘），退出 App 即消失。
+/// 与 Android 对齐：客户端不落盘，消息仅存内存，历史按需从服务器拉取。
 @MainActor
 final class ChatModel: ObservableObject {
 
@@ -51,10 +51,16 @@ final class ChatModel: ObservableObject {
             let peer = obj["peer"] as? String ?? ""
             guard !peer.isEmpty, let arr = obj["messages"] as? [[String: Any]] else { return }
             let msgs = arr.compactMap { Message(json: $0) }
-            conversations[peer] = msgs
-            historyRequested.insert(peer)
-            if let last = msgs.last {
-                markRead(peer: peer, lastReadId: last.id)
+            if msgs.isEmpty {
+                // 返回空 = 该会话已被服务器清空（物理删除），清空本地内存
+                conversations[peer] = []
+                unreadCounts[peer] = 0
+            } else {
+                conversations[peer] = msgs
+                historyRequested.insert(peer)
+                if let last = msgs.last {
+                    markRead(peer: peer, lastReadId: last.id)
+                }
             }
 
         case "send_ack":
@@ -84,7 +90,15 @@ final class ChatModel: ObservableObject {
             typingTimers.removeValue(forKey: peer)
 
         case "login_ok":
-            resetAfterRelogin(obj: obj)
+            resetAfterLogin(obj: obj)
+            // 离线消息回填（不重读未读计数，以服务器 unread 为准）
+            if let undelivered = obj["undelivered"] as? [[String: Any]] {
+                for raw in undelivered {
+                    if let msg = Message(json: raw) {
+                        insertWithoutUnread(msg)
+                    }
+                }
+            }
 
         default:
             break
@@ -104,6 +118,16 @@ final class ChatModel: ObservableObject {
         if !msg.isMine && currentChatPeer != peer {
             unreadCounts[peer, default: 0] += 1
         }
+    }
+
+    /// 插入但不累加未读（恢复历史/离线消息用，未读数以服务器下发为准）
+    private func insertWithoutUnread(_ msg: Message) {
+        let peer = msg.peer
+        var list = conversations[peer] ?? []
+        guard !list.contains(where: { $0.id == msg.id }) else { return }
+        list.append(msg)
+        list.sort { $0.id < $1.id }
+        conversations[peer] = list
     }
 
     /// 本地先上屏（负数临时 id），等 send_ack 回填真实 id
@@ -248,7 +272,7 @@ final class ChatModel: ObservableObject {
         conn?.clearHistory(peer: peer)
     }
 
-    private func resetAfterRelogin(obj: [String: Any]) {
+    private func resetAfterLogin(obj: [String: Any]) {
         typingPeers.removeAll()
         pendingAcks.removeAll()
         historyRequested.removeAll()
